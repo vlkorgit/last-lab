@@ -1,0 +1,100 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE HTML>
+<head>
+    <title>
+        Recognizer view
+    </title>
+    <style>
+        .center-block {
+            background-color: lightyellow;
+            margin-left: 20pc;
+            margin-right: 20pc;
+            padding-left: 10px;
+            padding-right: 10px;
+            align-content: center;
+            text-align:center;
+            
+        }
+        .imgstyle{
+            min-height:300px;
+            max-height:300px;
+        }
+    </style>
+</head>
+<body style="background-color:lightgoldenrodyellow">
+    <div class="center-block">
+        <h1>Recognizer html view</h1>
+        <h0>Select class</h0>
+        <button onclick="refresh()">Обновить</button>
+        <select id="selectid" onchange="change()"></select>
+        <div>
+            <img id="imgid" class="imgstyle" />
+            <p id="filenameid">Name</p>
+            <p id="classid">Class</p>
+            <p id="probid">Probability</p>
+        </div>
+        <div>
+            <button onclick="lClick()">Сюда</button>
+            <button onclick="rClick()">Туда</button>
+        </div>
+    </div>
+    <script>
+        mainidx = 0
+        e = document.getElementById("filenameid")
+        c = document.getElementById("classid")
+        p = document.getElementById("probid")
+        i = document.getElementById("imgid")
+        json =[]
+        window.onload = async function () {
+            refresh()
+        }
+
+        async function rClick() {
+            mainidx++
+            if (mainidx >= json.length) mainidx = 0;
+            e.innerText = json[mainidx].Filename
+            c.innerText = json[mainidx].Class
+            p.innerText = json[mainidx].Probability
+            i.src = "data:image/" + json[mainidx].Extension + ";base64," + json[mainidx].Blob;
+        }
+        async function lClick() {
+            mainidx--
+            if (mainidx < 0) mainidx = json.length-1;
+            e.innerText = json[mainidx].Filename
+            c.innerText = json[mainidx].Class
+            p.innerText = json[mainidx].Probability
+            i.src = "data:image/" + json[mainidx].Extension + ";base64," + json[mainidx].Blob;
+        }
+        async function refresh() {
+            const response = await fetch("http://localhost:5000/statistics")
+            const classes = await response.json()
+            var elem = document.getElementById("selectid")
+            while (elem.options.length > 0) {
+                elem.options[elem.options.length - 1] = null
+            }
+            var keys = Object.keys(classes);
+            for (let i = 0; i < keys.length; i++) {
+                let e = document.createElement("option")
+                e.text = keys[i]  //.substring(10)
+                e.value = i
+                elem.options.add(e)
+            }
+            document.getElementById("selectid").selectedIndex = 0
+            change()
+        }
+        async function change() {
+            mainidx = 0
+            let listbox = document.getElementById("selectid")
+            let _class = listbox.options[listbox.selectedIndex].text
+            const response = await fetch("http://localhost:5000/class/?_class=" + _class)
+            json = await response.json()
+            e.innerText = json[mainidx].Filename
+            c.innerText = json[mainidx].Class
+            p.innerText = json[mainidx].Probability
+            i.src = "data:image/" + json[mainidx].Extension + ";base64," + json[mainidx].Blob;
+        }
+    </script>
+</body>
